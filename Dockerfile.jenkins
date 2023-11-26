@@ -1,0 +1,40 @@
+FROM ubuntu
+
+#Install Java 17
+RUN apt-get update && apt-get install -y openjdk-17-jre \
+            git \
+            ca-certificates curl gnupg \
+            wget \
+            sudo 
+#Install apache Maven
+RUN wget https://dlcdn.apache.org/maven/maven-3/3.9.5/binaries/apache-maven-3.9.5-bin.tar.gz
+RUN tar xzf apache-maven-3.9.5-bin.tar.gz
+RUN sudo mkdir -p /opt/maven
+RUN mv apache-maven-3.9.5 /opt/maven
+RUN ln -s /opt/maven/bin/mvn /usr/bin/mvn
+
+#Install Node.js 
+
+RUN sudo mkdir -p /etc/apt/keyrings
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+ENV NODE_MAJOR=20
+RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+
+RUN sudo apt-get update && sudo apt-get install nodejs -y
+
+#Install Yarn 
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+RUN sudo apt update 
+RUN apt-get install yarn
+
+RUN mkdir -p /home/gau5hc
+COPY /mnt/c/Users/NguyenVietAnh/gau5hc/jenkins /home/gau5hc
+
+# Set working directory
+WORKDIR /home/gau5hc
+
+# Expose ports
+EXPOSE 8080
+# Entrypoint
+ENTRYPOINT ["mvn", "-am", "-pl", "war,bom", "-Pquick-build", "clean", "install"]
